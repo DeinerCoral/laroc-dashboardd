@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAROC AI | Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#7c3aed;--p2:#a78bfa;--cyan:#06b6d4;--cyan2:#67e8f9;
+  --green:#10b981;--green2:rgba(16,185,129,.12);--green3:#064e3b;
+  --red:#ef4444;--red2:rgba(239,68,68,.12);--red3:#7f1d1d;
+  --amber:#f59e0b;--amber2:rgba(245,158,11,.12);
+  --bg:#080b14;--glass:rgba(255,255,255,.04);--glass2:rgba(255,255,255,.07);--glass3:rgba(255,255,255,.02);
+  --b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.1);
+  --t1:#f1f5f9;--t2:#94a3b8;--t3:#475569;
+  --shadow-card:0 4px 24px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.05);
+}
+body{background:var(--bg);color:var(--t1);font-family:'Sora',sans-serif;min-height:100vh;font-size:14px;overflow-x:hidden}
+.mono{font-family:'JetBrains Mono',monospace}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4}
+.orb-wrap{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.22;animation:orbFloat 12s ease-in-out infinite}
+.orb1{width:600px;height:600px;background:radial-gradient(circle,#7c3aed,transparent);top:-200px;right:-100px}
+.orb2{width:500px;height:500px;background:radial-gradient(circle,#06b6d4,transparent);bottom:-150px;left:-100px;animation-delay:-6s}
+.orb3{width:300px;height:300px;background:radial-gradient(circle,#8b5cf6,transparent);top:50%;left:40%;animation-delay:-3s}
+@keyframes orbFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-40px) scale(1.05)}}
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:230px;background:linear-gradient(180deg,rgba(13,17,23,.98),rgba(8,11,20,.98));border-right:1px solid var(--b1);z-index:100;display:flex;flex-direction:column;backdrop-filter:blur(20px)}
+.sidebar-logo{padding:24px 20px 18px;border-bottom:1px solid var(--b1)}
+.logo-mark{display:inline-flex;align-items:center;gap:10px}
+.logo-hex{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;box-shadow:0 0 20px rgba(124,58,237,.4)}
+.logo-text h1{font-size:16px;font-weight:800;color:var(--t1);letter-spacing:-.3px}
+.logo-text p{font-size:9px;color:var(--t3);margin-top:1px;letter-spacing:.15em;text-transform:uppercase}
+.sidebar-nav{flex:1;padding:14px 10px;overflow-y:auto}
+.nav-section{font-size:9px;font-weight:700;color:var(--t3);letter-spacing:.18em;text-transform:uppercase;padding:14px 12px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:500;color:var(--t3);transition:all .2s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left;position:relative}
+.nav-item:hover{background:var(--glass2);color:var(--t1)}
+.nav-item.active{background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(6,182,212,.1));color:var(--t1);font-weight:600;border:1px solid rgba(124,58,237,.25)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:60%;background:linear-gradient(180deg,#7c3aed,#06b6d4);border-radius:0 2px 2px 0}
+.nav-item svg{width:16px;height:16px;flex-shrink:0}
+.sidebar-footer{padding:16px;border-top:1px solid var(--b1)}
+.bot-status{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--glass);border-radius:10px;border:1px solid var(--b1)}
+.bot-avatar{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#06b6d4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;box-shadow:0 0 12px rgba(124,58,237,.3);flex-shrink:0}
+.pulse-live{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--green)}
+.dot-live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulseLive 2s infinite}
+@keyframes pulseLive{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 5px rgba(16,185,129,0)}}
+/* MAIN */
+.main{margin-left:230px;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:rgba(8,11,20,.85);border-bottom:1px solid var(--b1);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;backdrop-filter:blur(20px)}
+.topbar-title{font-size:16px;font-weight:700;color:var(--t1)}
+.topbar-sub{font-size:11px;color:var(--t3)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.chip{display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--b1);background:var(--glass);color:var(--t3);transition:.15s}
+.chip:hover{border-color:var(--b2);color:var(--t2)}
+.chip.active{background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.4);color:var(--p2)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:.2s;font-family:'Sora',sans-serif}
+.btn-primary{background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;box-shadow:0 4px 15px rgba(124,58,237,.4)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.5)}
+.btn-ghost{background:var(--glass);color:var(--t2);border:1px solid var(--b1)}
+.btn-ghost:hover{background:var(--glass2);color:var(--t1)}
+/* CARDS */
+.card{background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border-radius:16px;border:1px solid var(--b1);box-shadow:var(--shadow-card);padding:20px;position:relative;overflow:hidden;backdrop-filter:blur(10px);transition:border-color .2s}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+.card:hover{border-color:var(--b2)}
+.stat-card{background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border-radius:16px;border:1px solid var(--b1);box-shadow:var(--shadow-card);padding:20px;position:relative;overflow:hidden;backdrop-filter:blur(10px);cursor:default;transition:all .25s}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+.stat-card:hover{transform:translateY(-3px);border-color:rgba(124,58,237,.3);box-shadow:var(--shadow-card),0 12px 40px rgba(124,58,237,.15)}
+.card-accent-p::after,.card-accent-c::after,.card-accent-g::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;opacity:.6}
+.card-accent-p::after{background:linear-gradient(90deg,transparent,var(--p),transparent)}
+.card-accent-c::after{background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+.card-accent-g::after{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.stat-label{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.stat-val{font-size:26px;font-weight:800;line-height:1.1;letter-spacing:-.5px}
+.stat-sub{font-size:11px;color:var(--t3);margin-top:5px;display:flex;align-items:center;gap:5px}
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.04em}
+.badge-green{background:var(--green2);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+.badge-red{background:var(--red2);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.badge-amber{background:var(--amber2);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.badge-purple{background:rgba(124,58,237,.15);color:var(--p2);border:1px solid rgba(124,58,237,.25)}
+.badge-cyan{background:rgba(6,182,212,.1);color:var(--cyan);border:1px solid rgba(6,182,212,.2)}
+.badge-blue{background:rgba(59,130,246,.1);color:#60a5fa;border:1px solid rgba(59,130,246,.2)}
+.badge-beta{background:linear-gradient(135deg,#7c3aed,#06b6d4);color:#fff;border-radius:6px;font-size:9px;padding:2px 7px}
+.div{height:1px;background:var(--b1);margin:14px 0}
+/* HEATMAP */
+.hm-cell{aspect-ratio:1;border-radius:4px;transition:all .2s;cursor:pointer}
+.hm-cell:hover{transform:scale(1.3)}
+.hm-0{background:rgba(255,255,255,.04)}.hm-1{background:rgba(124,58,237,.2)}.hm-2{background:rgba(124,58,237,.4)}.hm-3{background:rgba(124,58,237,.6)}.hm-4{background:rgba(124,58,237,.8)}.hm-5{background:#7c3aed;box-shadow:0 0 8px rgba(124,58,237,.6)}
+/* CALENDAR */
+.cal-day{border:1px solid var(--b1);border-radius:10px;padding:8px;min-height:80px;transition:.2s;cursor:pointer;background:var(--glass3)}
+.cal-day:hover{border-color:var(--b2);background:var(--glass)}
+.cal-day.win-day{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.04)}
+.cal-day.loss-day{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.04)}
+.cal-num{font-size:11px;font-weight:600;color:var(--t3)}
+.cal-pnl-pos{font-size:13px;font-weight:800;color:var(--green)}
+.cal-pnl-neg{font-size:13px;font-weight:800;color:var(--red)}
+.week-sum{background:var(--glass);border-radius:8px;border:1px solid var(--b1);padding:6px 8px;text-align:center}
+/* JOURNAL */
+.j-entry{border:1px solid var(--b1);border-radius:12px;padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:.2s;background:var(--glass3);position:relative;overflow:hidden}
+.j-entry::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent)}
+.j-entry:hover{border-color:var(--b2);background:var(--glass);transform:translateX(2px)}
+.j-entry.win-entry{border-left:3px solid var(--green)}
+.j-entry.loss-entry{border-left:3px solid var(--red)}
+/* LOG */
+.log-row{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--b1);font-size:11.5px}
+.log-row:last-child{border-bottom:none}
+.log-time{color:var(--t3);min-width:55px;font-family:'JetBrains Mono',monospace;font-size:10px;flex-shrink:0;padding-top:1px}
+/* RING */
+.ring-svg{transform:rotate(-90deg)}
+.ring-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.ring-center{position:absolute;text-align:center}
+.score-bar-wrap{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:6px}
+.score-bar{height:4px;border-radius:2px;background:linear-gradient(90deg,#7c3aed,#06b6d4)}
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;padding:10px 14px;border-bottom:1px solid var(--b1)}
+.tbl td{padding:11px 14px;border-bottom:1px solid var(--b1);font-size:12px}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover td{background:var(--glass)}
+.avatar{display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;border-radius:10px}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(124,58,237,.3);border-radius:2px}
+/* ROBOT CANVAS */
+#hero-canvas{display:block;width:100%;height:100%}
+.robot-card{position:relative;background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(6,182,212,.05));border-radius:16px;border:1px solid rgba(124,58,237,.2);overflow:hidden;box-shadow:0 0 40px rgba(124,58,237,.08)}
+.robot-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(124,58,237,.12),transparent 70%);pointer-events:none}
+/* ANIMATIONS */
+.content{padding:24px 28px;flex:1;position:relative;z-index:1}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.cursor-blink{animation:blink 1s step-end infinite}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.fade-up-1{animation:fadeUp .5s .05s ease both}.fade-up-2{animation:fadeUp .5s .1s ease both}.fade-up-3{animation:fadeUp .5s .15s ease both}.fade-up-4{animation:fadeUp .5s .2s ease both}
+@keyframes glowPulse{0%,100%{text-shadow:0 0 20px rgba(124,58,237,.4)}50%{text-shadow:0 0 40px rgba(124,58,237,.8),0 0 60px rgba(6,182,212,.3)}}
+.glow-text{animation:glowPulse 3s ease-in-out infinite}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sec-title{font-size:11px;font-weight:700;color:var(--t2);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.sec-title::before{content:'';width:3px;height:12px;background:linear-gradient(180deg,#7c3aed,#06b6d4);border-radius:2px;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="orb-wrap"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+
+/* ════ DATA DE RESPALDO ════ */
+const DATA={
+  balance:0.00,net_pnl:0.0,avg_win:0.0,avg_loss:0.0,
+  win_rate:0,sharpe:0.0,drawdown:0.0,trades_hoy:0,exchanges:2,laroc_score:85,
+  radar:{win:75,discipline:80,resilience:75,risk:85,profit_factor:80},
+  bots:[
+    {nombre:"LAROC AI V2.0",exchange:"MetaTrader 5",par:"EURUSD",pnl:0.0,trades:0,winRate:0},
+    {nombre:"LAROC AI V2.0",exchange:"MetaTrader 5",par:"GBPUSD",pnl:0.0,trades:0,winRate:0}
+  ],
+  heatmap:Array(56).fill(0),
+  pnl_chart:[{d:'L',v:0},{d:'M',v:0},{d:'X',v:0},{d:'J',v:0},{d:'V',v:0}],
+  balance_chart:[0,0,0,0,0,0,0,0,0,0],
+  win_pct_chart:[0,0,0,0,0],avg_win_chart:[0,0,0,0],avg_loss_chart:[0,0,0,0],
+  journal:[],cal_trades:{},
+  logs:[{ts:"00:00",msg:"Esperando sincronización del bot...",tipo:"info"}],
+  ultimo_activo:"EURUSD",ultimo_status:"ESCANEAR DISPAROS REALES EN CURSO...",
+};
+
+const isPos=v=>typeof v==='string'?!v.startsWith('-'):v>=0;
+const fmt=(n,d=2)=>typeof n==='number'?n.toLocaleString('es-CO',{minimumFractionDigits:d,maximumFractionDigits:d}):n;
+const MONTHS=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DAYS_SHORT=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+const Ic={
+  grid:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  bot:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="7" r="4"/><line x1="8" y1="21" x2="8" y2="23"/><line x1="16" y1="21" x2="16" y2="23"/></svg>,
+  book:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+  chart:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  cal:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>,
+  gear:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+  bell:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+  spark:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>,
+  chevL:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15,18 9,12 15,6"/></svg>,
+  chevR:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9,18 15,12 9,6"/></svg>,
+  info:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width:11,height:11}}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+};
+
+/* ════ ROBOT 3D CANVAS — ahora solo en Config ════ */
+function RobotCanvas(){
+  const ref=useRef(null);
+  useEffect(()=>{
+    const canvas=ref.current;if(!canvas)return;
+    const ctx=canvas.getContext('2d');
+    let raf,t=0;
+    const resize=()=>{canvas.width=canvas.offsetWidth*window.devicePixelRatio;canvas.height=canvas.offsetHeight*window.devicePixelRatio;ctx.scale(window.devicePixelRatio,window.devicePixelRatio)};
+    resize();window.addEventListener('resize',resize);
+    const candles=Array.from({length:22},(_,i)=>({x:i,open:50+Math.sin(i*.8)*20+Math.random()*10,close:50+Math.sin(i*.8+.4)*20+Math.random()*10,high:0,low:0}));
+    candles.forEach(c=>{c.high=Math.max(c.open,c.close)+Math.random()*8;c.low=Math.min(c.open,c.close)-Math.random()*8});
+    function draw(){
+      const W=canvas.offsetWidth,H=canvas.offsetHeight;
+      ctx.clearRect(0,0,W,H);t+=.012;
+      const bgG=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,W*.7);
+      bgG.addColorStop(0,'rgba(124,58,237,.05)');bgG.addColorStop(1,'transparent');
+      ctx.fillStyle=bgG;ctx.fillRect(0,0,W,H);
+      ctx.strokeStyle='rgba(124,58,237,.06)';ctx.lineWidth=1;
+      for(let x=0;x<W;x+=44){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+      for(let y=0;y<H;y+=44){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+      const cw=Math.floor(W/28),gap=3,chartH=H*.42,chartY=H*.52;
+      candles.forEach((c,i)=>{
+        const x=12+i*(cw+gap);
+        const sY=(v)=>chartY-(v/100)*chartH;
+        const isG=c.close>=c.open;
+        const col=isG?`rgba(16,185,129,${.65+Math.sin(t+i)*.15})`:`rgba(239,68,68,${.65+Math.sin(t+i)*.15})`;
+        ctx.shadowColor=isG?'rgba(16,185,129,.25)':'rgba(239,68,68,.25)';ctx.shadowBlur=5;
+        ctx.strokeStyle=col;ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.moveTo(x+cw/2,sY(c.high));ctx.lineTo(x+cw/2,sY(c.low));ctx.stroke();
+        const by=sY(Math.max(c.open,c.close));const bh=Math.max(2,Math.abs(sY(c.open)-sY(c.close)));
+        ctx.fillStyle=col;ctx.beginPath();ctx.roundRect(x,by,cw,bh,2);ctx.fill();ctx.shadowBlur=0;
+      });
+      ctx.beginPath();ctx.strokeStyle='rgba(6,182,212,.65)';ctx.lineWidth=2;
+      ctx.shadowColor='rgba(6,182,212,.4)';ctx.shadowBlur=8;
+      candles.forEach((c,i)=>{const x=12+i*(cw+gap)+cw/2;const y=H*.52-(((c.open+c.close)/2)/100)*H*.42;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+      ctx.stroke();ctx.shadowBlur=0;
+      const rx=W*.62,ry=H*.36+Math.sin(t)*8;
+      const sc=Math.min(W,H)*.004;
+      const sGr=ctx.createRadialGradient(rx,ry+85*sc,0,rx,ry+85*sc,55*sc);
+      sGr.addColorStop(0,'rgba(124,58,237,.2)');sGr.addColorStop(1,'transparent');
+      ctx.fillStyle=sGr;ctx.beginPath();ctx.ellipse(rx,ry+85*sc,55*sc,13*sc,0,0,Math.PI*2);ctx.fill();
+      function face(pts,fill,stroke='none',lw=1){ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i][0],pts[i][1]);ctx.closePath();if(fill!=='none'){ctx.fillStyle=fill;ctx.fill()}if(stroke!=='none'){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}}
+      const iso=(x,y,z)=>[rx+(x-z)*sc*.866,ry+(x+z)*sc*.5-y*sc];
+      const bW=28,bH=36,bD=22;
+      const B={tfl:iso(-bW/2,bH,bD/2),tfr:iso(bW/2,bH,bD/2),tbr:iso(bW/2,bH,-bD/2),tbl:iso(-bW/2,bH,-bD/2),bfl:iso(-bW/2,0,bD/2),bfr:iso(bW/2,0,bD/2),bbr:iso(bW/2,0,-bD/2)};
+      face([B.tfl,B.tfr,B.tbr,B.tbl],'rgba(124,58,237,.9)','rgba(167,139,250,.4)',1);
+      face([B.bfl,B.bfr,B.tfr,B.tfl],'rgba(88,28,220,.85)','rgba(167,139,250,.3)',1);
+      face([B.bfr,B.bbr,B.tbr,B.tfr],'rgba(67,20,180,.9)','rgba(139,92,246,.3)',1);
+      const sp=5;
+      const sfl=iso(-bW/2+sp,bH-sp,bD/2+.1),sfr=iso(bW/2-sp,bH-sp,bD/2+.1),sbr=iso(bW/2-sp,bH/2,bD/2+.1),sbl=iso(-bW/2+sp,bH/2,bD/2+.1);
+      face([sfl,sfr,sbr,sbl],'rgba(0,0,0,.75)');face([sfl,sfr,sbr,sbl],'none','rgba(6,182,212,.6)',1);
+      const sLeft=Math.min(sfl[0],sbl[0])+2*sc,sRight=Math.max(sfr[0],sbr[0])-2*sc,sTop=Math.min(sfl[1],sfr[1])+2*sc,sBot=Math.max(sbl[1],sbr[1])-2*sc;
+      ctx.save();ctx.beginPath();ctx.moveTo(sfl[0],sfl[1]);ctx.lineTo(sfr[0],sfr[1]);ctx.lineTo(sbr[0],sbr[1]);ctx.lineTo(sbl[0],sbl[1]);ctx.closePath();ctx.clip();
+      ctx.strokeStyle=`rgba(6,182,212,${.8+Math.sin(t*2)*.15})`;ctx.lineWidth=1.5;ctx.shadowColor='rgba(6,182,212,.8)';ctx.shadowBlur=6;
+      ctx.beginPath();for(let i=0;i<=12;i++){const px=sLeft+(sRight-sLeft)*i/12;const py=sTop+(sBot-sTop)*(.5+Math.sin(t*2+i*.7)*.35);i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);}
+      ctx.stroke();ctx.restore();ctx.shadowBlur=0;
+      const hW=22,hH=20,hD=18,headY=bH+16;
+      const H2={tfl:iso(-hW/2,headY+hH,hD/2),tfr:iso(hW/2,headY+hH,hD/2),tbr:iso(hW/2,headY+hH,-hD/2),tbl:iso(-hW/2,headY+hH,-hD/2),bfl:iso(-hW/2,headY,hD/2),bfr:iso(hW/2,headY,hD/2)};
+      face([H2.tfl,H2.tfr,H2.tbr,H2.tbl],'rgba(124,58,237,.9)','rgba(167,139,250,.4)',1);
+      face([H2.bfl,H2.bfr,H2.tfr,H2.tfl],'rgba(99,40,200,.85)','rgba(167,139,250,.3)',1);
+      const eye1=iso(-6,headY+12,hD/2+.1),eye2=iso(6,headY+12,hD/2+.1);
+      const eyeC=`rgba(6,182,212,${.9+Math.sin(t*3)*.1})`;
+      [eye1,eye2].forEach(e=>{ctx.beginPath();ctx.arc(e[0],e[1],2.5*sc,0,Math.PI*2);ctx.fillStyle=eyeC;ctx.shadowColor=eyeC;ctx.shadowBlur=12;ctx.fill();ctx.shadowBlur=0});
+      const laA=Math.sin(t*1.5)*.4;
+      const la1=iso(-bW/2-2,bH-6,0),la2=iso(-bW/2-2-28*Math.cos(laA),bH-6-28*Math.sin(laA)*.5,0);
+      ctx.strokeStyle='rgba(88,28,220,.9)';ctx.lineWidth=8*sc;ctx.lineCap='round';ctx.shadowColor='rgba(124,58,237,.4)';ctx.shadowBlur=6;
+      ctx.beginPath();ctx.moveTo(la1[0],la1[1]);ctx.lineTo(la2[0],la2[1]);ctx.stroke();
+      const ra1=iso(bW/2+2,bH-6,0),ra2=iso(bW/2+2+20,bH-12,0);
+      ctx.beginPath();ctx.moveTo(ra1[0],ra1[1]);ctx.lineTo(ra2[0],ra2[1]);ctx.stroke();
+      ctx.shadowBlur=0;ctx.lineCap='butt';
+      [[iso(-10,0,0),iso(-10,-22,4+Math.sin(t)*3)],[iso(10,0,0),iso(10,-22,-4+Math.sin(t+Math.PI)*3)]].forEach(([p1,p2])=>{
+        ctx.strokeStyle='rgba(67,20,180,.9)';ctx.lineWidth=9*sc;ctx.lineCap='round';ctx.shadowColor='rgba(124,58,237,.3)';ctx.shadowBlur=5;
+        ctx.beginPath();ctx.moveTo(p1[0],p1[1]);ctx.lineTo(p2[0],p2[1]);ctx.stroke();
+      });
+      ctx.shadowBlur=0;ctx.lineCap='butt';
+      const ant1=iso(0,headY+hH,0),ant2=iso(0,headY+hH+14+Math.sin(t*2)*3,0);
+      ctx.strokeStyle='rgba(167,139,250,.7)';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(ant1[0],ant1[1]);ctx.lineTo(ant2[0],ant2[1]);ctx.stroke();
+      const aC=`rgba(6,182,212,${.8+Math.sin(t*4)*.2})`;
+      ctx.beginPath();ctx.arc(ant2[0],ant2[1],3.5*sc,0,Math.PI*2);ctx.fillStyle=aC;ctx.shadowColor=aC;ctx.shadowBlur=14;ctx.fill();ctx.shadowBlur=0;
+      [{label:'WIN',x:.14,y:.12},{label:'BUY',x:.08,y:.52},{label:'RSI',x:.78,y:.56},{label:'SL',x:.74,y:.14}].forEach((p,i)=>{
+        const px=W*p.x+Math.sin(t+i)*7,py=H*p.y+Math.cos(t*.7+i)*5;
+        const a=.4+Math.sin(t+i)*.25;
+        ctx.font=`bold ${10*sc}px JetBrains Mono,monospace`;
+        ctx.fillStyle=i<2?`rgba(16,185,129,${a})`:`rgba(124,58,237,${a})`;
+        ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=8;ctx.fillText(p.label,px,py);ctx.shadowBlur=0;
+      });
+      [{x:.25,y:.4,up:true},{x:.44,y:.6,up:false},{x:.56,y:.36,up:true}].forEach((a,i)=>{
+        const ax=W*a.x,ay=H*a.y+Math.sin(t+i*2)*5;
+        const col=a.up?`rgba(16,185,129,${.45+Math.sin(t+i)*.3})`:`rgba(239,68,68,${.45+Math.sin(t+i)*.3})`;
+        ctx.fillStyle=col;ctx.shadowColor=col;ctx.shadowBlur=8;ctx.beginPath();
+        if(a.up){ctx.moveTo(ax,ay-9*sc);ctx.lineTo(ax-6*sc,ay);ctx.lineTo(ax+6*sc,ay)}
+        else{ctx.moveTo(ax,ay+9*sc);ctx.lineTo(ax-6*sc,ay);ctx.lineTo(ax+6*sc,ay)}
+        ctx.closePath();ctx.fill();ctx.shadowBlur=0;
+      });
+      raf=requestAnimationFrame(draw);
+    }
+    draw();
+    return()=>{cancelAnimationFrame(raf);window.removeEventListener('resize',resize)};
+  },[]);
+  return <canvas ref={ref} id="hero-canvas"/>;
+}
+
+/* ════ CHART COMPONENTS ════ */
+function Ring({pct,color='#7c3aed',size=90,stroke=7}){
+  const r=(size-stroke*2)/2;const circ=2*Math.PI*r;const off=circ-(pct/100)*circ;
+  return(
+    <div className="ring-wrap" style={{width:size,height:size}}>
+      <svg className="ring-svg" width={size} height={size}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,.06)" strokeWidth={stroke}/>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeDasharray={circ} strokeDashoffset={off} strokeLinecap="round" style={{filter:`drop-shadow(0 0 6px ${color})`}}/>
+      </svg>
+      <div className="ring-center mono" style={{fontSize:size>70?17:13,fontWeight:700,color,lineHeight:1,textShadow:`0 0 10px ${color}`}}>{pct}%</div>
+    </div>
+  );
+}
+function RadarChart({data}){
+  const ref=useRef(null);const inst=useRef(null);
+  useEffect(()=>{
+    if(!ref.current)return;if(inst.current)inst.current.destroy();
+    inst.current=new Chart(ref.current,{type:'radar',data:{labels:['Win Rate','Disciplina','Resiliencia','Riesgo','Profit F.'],
+      datasets:[{data:Object.values(data),fill:true,backgroundColor:'rgba(124,58,237,.15)',borderColor:'#a78bfa',borderWidth:2,pointBackgroundColor:'#7c3aed',pointRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},
+        scales:{r:{min:0,max:100,ticks:{display:false},grid:{color:'rgba(255,255,255,.06)'},angleLines:{color:'rgba(255,255,255,.06)'},pointLabels:{font:{size:10,family:"'Sora'"},color:'#64748b'}}}}});
+    return()=>inst.current?.destroy();
+  },[JSON.stringify(data)]);
+  return <canvas ref={ref} style={{maxHeight:180}}/>;
+}
+function PnLChart({data}){
+  const ref=useRef(null);const inst=useRef(null);
+  const nums=Array.isArray(data)?data:[];
+  useEffect(()=>{
+    if(!ref.current)return;if(inst.current)inst.current.destroy();
+    inst.current=new Chart(ref.current,{type:'bar',
+      data:{labels:nums.map(d=>d.d||d),datasets:[{data:nums.map(d=>d.v!==undefined?d.v:d),
+        backgroundColor:nums.map(d=>(d.v!==undefined?d.v:d)>=0?'rgba(16,185,129,.6)':'rgba(239,68,68,.6)'),
+        borderColor:nums.map(d=>(d.v!==undefined?d.v:d)>=0?'#10b981':'#ef4444'),borderWidth:1,borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#475569',font:{size:10}}},
+          y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#475569',font:{size:10},callback:v=>'$'+v}}}}});
+    return()=>inst.current?.destroy();
+  },[JSON.stringify(nums)]);
+  return <canvas ref={ref} style={{width:'100%',height:'100%',display:'block'}}/>;
+}
+function BalanceChart({data}){
+  const ref=useRef(null);const inst=useRef(null);
+  useEffect(()=>{
+    if(!ref.current||!data?.length)return;if(inst.current)inst.current.destroy();
+    const ctx2=ref.current.getContext('2d');
+    const gr=ctx2.createLinearGradient(0,0,0,140);
+    gr.addColorStop(0,'rgba(124,58,237,.3)');gr.addColorStop(1,'rgba(124,58,237,.01)');
+    inst.current=new Chart(ref.current,{type:'line',
+      data:{labels:data.map((_,i)=>i+1),datasets:[
+        {data,fill:true,backgroundColor:gr,borderColor:'#7c3aed',borderWidth:2.5,pointRadius:0,tension:.4},
+        {data:data.map(v=>v*.92),fill:false,borderColor:'rgba(6,182,212,.4)',borderWidth:1.5,pointRadius:0,tension:.4,borderDash:[4,4]}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{display:false},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#475569',font:{size:10},callback:v=>'$'+v.toLocaleString()}}}}});
+    return()=>inst.current?.destroy();
+  },[JSON.stringify(data)]);
+  return <canvas ref={ref} style={{width:'100%',height:'100%',display:'block'}}/>;
+}
+function WinLineChart({wp,aw,al}){
+  const ref=useRef(null);const inst=useRef(null);
+  useEffect(()=>{
+    if(!ref.current||!wp?.length)return;if(inst.current)inst.current.destroy();
+    inst.current=new Chart(ref.current,{type:'line',
+      data:{labels:wp.map((_,i)=>i+1),datasets:[
+        {label:'Win %',data:wp,borderColor:'#a78bfa',borderWidth:2,fill:false,pointRadius:0,tension:.4,yAxisID:'y1'},
+        {label:'Avg Win',data:aw,borderColor:'#10b981',borderWidth:1.5,fill:false,pointRadius:0,tension:.4,yAxisID:'y'},
+        {label:'Avg Loss',data:al,borderColor:'#ef4444',borderWidth:1.5,fill:false,pointRadius:0,tension:.4,yAxisID:'y'}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',labels:{boxWidth:10,font:{size:10},color:'#64748b',padding:12}}},
+        scales:{x:{display:false},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#475569',font:{size:10},callback:v=>'$'+v}},
+          y1:{position:'right',grid:{display:false},ticks:{color:'#475569',font:{size:10},callback:v=>v+'%'}}}}});
+    return()=>inst.current?.destroy();
+  },[JSON.stringify(wp)]);
+  return <canvas ref={ref} style={{width:'100%',height:'100%',display:'block'}}/>;
+}
+function Clock(){
+  const [t,setT]=useState('');
+  useEffect(()=>{const f=()=>setT(new Date().toLocaleTimeString('es-CO',{hour12:false}));f();const id=setInterval(f,1000);return()=>clearInterval(id);},[]);
+  return <span className="mono" style={{fontSize:12,color:'#475569',letterSpacing:'.06em'}}>{t}</span>;
+}
+function Typing({text}){
+  const [d2,setD2]=useState('');const [i,setI]=useState(0);
+  useEffect(()=>{setD2('');setI(0);},[text]);
+  useEffect(()=>{if(i<(text||'').length){const id=setTimeout(()=>{setD2(p=>p+(text||'')[i]);setI(x=>x+1)},22);return()=>clearTimeout(id);}},[i,text]);
+  return <span className="mono" style={{fontSize:12,color:'#a78bfa'}}>{d2}<span className="cursor-blink" style={{opacity:.8}}>&#x258C;</span></span>;
+}
+function JEntry({e}){
+  const [open,setOpen]=useState(false);const pos=isPos(e.pnl);
+  return(
+    <div className={`j-entry ${e.resultado}-entry`} onClick={()=>setOpen(o=>!o)}>
+      <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+        <span className="mono" style={{fontSize:10,color:'#475569',minWidth:40}}>{e.ts}</span>
+        <span style={{fontWeight:700,fontSize:13,color:'#f1f5f9'}}>{e.par}</span>
+        <span className={`badge ${e.lado==='LONG'?'badge-green':'badge-purple'}`}>{e.lado}</span>
+        {(e.tags||[]).map(tg=><span key={tg} className="badge badge-blue" style={{fontSize:9}}>{tg}</span>)}
+        <div style={{flex:1}}/>
+        <span style={{fontWeight:800,color:pos?'#10b981':'#ef4444',fontSize:14,textShadow:pos?'0 0 12px rgba(16,185,129,.4)':'0 0 12px rgba(239,68,68,.4)'}}>{e.pnl}</span>
+        <span style={{color:'#475569',fontSize:11}}>{open?'▲':'▼'}</span>
+      </div>
+      <div style={{display:'flex',gap:16,marginTop:6,flexWrap:'wrap'}}>
+        <span style={{fontSize:11,color:'#475569'}}>OUT <span className="mono" style={{color:'#94a3b8'}}>{e.salida}</span></span>
+        <span style={{fontSize:11,color:'#475569'}}>DUR <span className="mono" style={{color:'#94a3b8'}}>{e.tiempo}</span></span>
+        <span style={{fontSize:11,color:'#475569'}}>CONF <span className="mono" style={{color:e.confianza>=80?'#10b981':'#f59e0b'}}>{e.confianza}%</span></span>
+      </div>
+      {open&&(
+        <div style={{marginTop:10,background:'rgba(124,58,237,.06)',borderRadius:10,padding:'12px 14px',borderLeft:'3px solid rgba(124,58,237,.5)'}}>
+          <p className="mono" style={{fontSize:10,fontWeight:700,color:'#a78bfa',letterSpacing:'.12em',textTransform:'uppercase',marginBottom:6}}>RAZONAMIENTO DEL BOT</p>
+          <p style={{fontSize:12,color:'#94a3b8',lineHeight:1.75}}>{e.razon}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+function CalendarView({trades}){
+  const [year,setYear]=useState(2026);const [month,setMonth]=useState(4);
+  const firstDay=new Date(year,month,1).getDay();const daysInMonth=new Date(year,month+1,0).getDate();
+  const cells=[];for(let i=0;i<firstDay;i++)cells.push(null);for(let d=1;d<=daysInMonth;d++)cells.push(d);
+  const ws={};let wi=0;
+  cells.forEach((d,i)=>{if(i>0&&i%7===0)wi++;if(d){const k=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const tr=(trades||{})[k];if(tr)ws[wi]=(ws[wi]||0)+tr.pnl;}});
+  return(
+    <div>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <button className="btn btn-ghost" style={{padding:'5px 9px'}} onClick={()=>setMonth(m=>m===0?(setYear(y=>y-1),11):m-1)}><span style={{width:13,height:13,display:'flex'}}>{Ic.chevL}</span></button>
+          <span style={{fontWeight:700,fontSize:14,color:'#f1f5f9'}}>{MONTHS[month]} {year}</span>
+          <button className="btn btn-ghost" style={{padding:'5px 9px'}} onClick={()=>setMonth(m=>m===11?(setYear(y=>y+1),0):m+1)}><span style={{width:13,height:13,display:'flex'}}>{Ic.chevR}</span></button>
+        </div>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr) 80px',gap:3,marginBottom:3}}>
+        {DAYS_SHORT.map(d=><div key={d} style={{textAlign:'center',fontSize:10,fontWeight:700,color:'#475569',padding:'4px 0',letterSpacing:'.06em'}}>{d}</div>)}
+        <div style={{fontSize:10,fontWeight:700,color:'#475569',padding:'4px 0',textAlign:'center',letterSpacing:'.06em'}}>SEM</div>
+      </div>
+      {Array.from({length:Math.ceil(cells.length/7)},(_,row)=>(
+        <div key={row} style={{display:'grid',gridTemplateColumns:'repeat(7,1fr) 80px',gap:3,marginBottom:3}}>
+          {Array.from({length:7},(_,col)=>{
+            const d=cells[row*7+col];
+            if(d===undefined||d===null)return <div key={col} style={{background:'rgba(255,255,255,.01)',borderRadius:10,minHeight:74,border:'1px solid rgba(255,255,255,.03)'}}/>;
+            const key=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const tr=(trades||{})[key];
+            return(
+              <div key={col} className={`cal-day ${tr?tr.pnl>=0?'win-day':'loss-day':''}`}>
+                <div className="cal-num">{d}</div>
+                {tr&&<><div className={tr.pnl>=0?'cal-pnl-pos':'cal-pnl-neg'} style={{marginTop:6}}>{tr.pnl>=0?'+':''}{Math.abs(tr.pnl)>=1000?'$'+(tr.pnl/1000).toFixed(1)+'K':'$'+tr.pnl}</div><div style={{fontSize:10,color:'#475569',marginTop:2}}>{tr.trades} trades</div></>}
+              </div>
+            );
+          })}
+          <div className="week-sum">
+            {ws[row]!==undefined?(<><div style={{fontSize:12,fontWeight:800,color:ws[row]>=0?'#10b981':'#ef4444',textShadow:ws[row]>=0?'0 0 8px rgba(16,185,129,.4)':'0 0 8px rgba(239,68,68,.4)'}}>{ws[row]>=0?'+':''}{Math.abs(ws[row])>=1000?'$'+(ws[row]/1000).toFixed(1)+'K':'$'+ws[row]}</div><div style={{fontSize:9,color:'#475569',marginTop:2}}>SEM {row+1}</div></>):<div style={{fontSize:10,color:'#1e2a3a'}}>—</div>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ════ MAIN APP — LÓGICA ORIGINAL INTACTA ════ */
+function App(){
+  const [tab,setTab]=useState('dashboard');
+  const [d,setD]=useState(DATA);
+
+  useEffect(()=>{
+    const fetcher=async()=>{
+      try{
+        let upd={...DATA};
+        try{const r=await fetch("dashboard_data.json");if(r.ok){const j=await r.json();upd={...upd,...j};}}catch(e){}
+        try{
+          const r2=await fetch("historial_trades.json");
+          if(r2.ok){
+            const h=await r2.json();
+            if(h&&h.length>0){
+              const tot=h.length,wins=h.filter(t=>t.resultado==='win').length;
+              upd.journal=[...h].reverse();upd.trades_hoy=tot;
+              upd.win_rate=Math.round(wins/tot*100);
+              upd.net_pnl=h.reduce((a,t)=>a+(t.pnl_num||0),0);
+              const cal={};h.forEach(t=>{if(!cal[t.fecha])cal[t.fecha]={pnl:0,trades:0};cal[t.fecha].pnl+=t.pnl_num;cal[t.fecha].trades+=1;});
+              upd.cal_trades=cal;
+              upd.logs=h.slice(-6).map(hh=>({ts:hh.ts,msg:`Orden MT5 cerrada en ${hh.par}: ${hh.pnl}`,tipo:hh.resultado==='win'?'ok':'warn'})).reverse();
+            }
+          }
+        }catch(e){}
+        setD(upd);
+      }catch(e){console.log("Esperando escrituras del bot...");}
+    };
+    fetcher();const id=setInterval(fetcher,2000);return()=>clearInterval(id);
+  },[]);
+
+  const SN=({id,label,icon})=>(
+    <button className={`nav-item ${tab===id?'active':''}`} onClick={()=>setTab(id)}>
+      <span style={{width:15,height:15,display:'flex',flexShrink:0}}>{icon}</span>{label}
+    </button>
+  );
+  const PH=({title,sub})=>(
+    <div style={{marginBottom:22}}>
+      <h2 style={{fontSize:20,fontWeight:800,color:'#f1f5f9',letterSpacing:'-.4px'}}>{title}</h2>
+      {sub&&<p style={{fontSize:12,color:'#475569',marginTop:3}}>{sub}</p>}
+    </div>
+  );
+
+  return(
+    <>
+    <div className="sidebar">
+      <div className="sidebar-logo">
+        <div className="logo-mark">
+          <div className="logo-hex">LA</div>
+          <div className="logo-text"><h1>LAROC AI</h1><p>Institutional Terminal</p></div>
+        </div>
+      </div>
+      <div className="sidebar-nav">
+        <div className="nav-section">Principal</div>
+        <SN id="dashboard" label="Dashboard"  icon={Ic.grid}/>
+        <SN id="bots"      label="Mis Bots"    icon={Ic.bot}/>
+        <SN id="journal"   label="Journal"     icon={Ic.book}/>
+        <SN id="analytics" label="Analytics"   icon={Ic.chart}/>
+        <SN id="calendar"  label="Calendario"  icon={Ic.cal}/>
+        <div className="nav-section">Sistema</div>
+        <SN id="config"    label="Config"      icon={Ic.gear}/>
+      </div>
+      <div className="sidebar-footer">
+        <div className="bot-status">
+          <div className="bot-avatar">LA</div>
+          <div><div style={{fontSize:12,fontWeight:700,color:'#f1f5f9'}}>LAROC Bot</div><div className="pulse-live"><div className="dot-live"/><span>Online</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div className="main">
+      <div className="topbar">
+        <div style={{display:'flex',flexDirection:'column',gap:2}}>
+          <div className="topbar-title">{tab==='dashboard'?'Dashboard':tab==='bots'?'Mis Bots':tab==='journal'?'Journal':tab==='analytics'?'Analytics':tab==='calendar'?'Calendario':'Configuración'}</div>
+          <div className="topbar-sub">{tab==='dashboard'?'Vista general en tiempo real':'LAROC AI V2.0'}</div>
+        </div>
+        <div className="topbar-right">
+          <div style={{display:'flex',gap:5}}>{['Hoy','7D','30D','YTD'].map((l,i)=><span key={l} className={`chip ${i===0?'active':''}`}>{l}</span>)}</div>
+          <Clock/>
+          <button className="btn btn-ghost" style={{padding:'7px 10px'}}><span style={{width:15,height:15,display:'flex'}}>{Ic.bell}</span></button>
+          <button className="btn btn-primary"><span style={{width:13,height:13,display:'flex'}}>{Ic.spark}</span>Start Day</button>
+        </div>
+      </div>
+
+      <div className="content">
+
+        {/* ════ DASHBOARD — sin robot, layout denso y limpio ════ */}
+        {tab==='dashboard'&&(
+          <>
+          {/* Fila 1 — 4 stat cards */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:14}}>
+            <div className="stat-card card-accent-p fade-up-1">
+              <div className="stat-label">{Ic.info} Balance de Cuenta</div>
+              <div className="stat-val mono" style={{color:'#f1f5f9'}}>{typeof d.balance==='number'?fmt(d.balance):d.balance}</div>
+              <div className="stat-sub"><span className="badge badge-green">LIVE</span><span style={{marginLeft:5}}>Funded Elite Account</span></div>
+            </div>
+            <div className="stat-card card-accent-c fade-up-2">
+              <div className="stat-label">{Ic.info} P&L Historial (7D)</div>
+              <div className="stat-val mono" style={{color:d.net_pnl>=0?'#10b981':'#ef4444',textShadow:d.net_pnl>=0?'0 0 20px rgba(16,185,129,.3)':'0 0 20px rgba(239,68,68,.3)'}}>${fmt(d.net_pnl)}</div>
+              <div className="stat-sub">{d.trades_hoy} operaciones ejecutadas</div>
+            </div>
+            <div className="stat-card card-accent-g fade-up-3">
+              <div className="stat-label">{Ic.info} Win Rate Real</div>
+              <div style={{display:'flex',alignItems:'center',gap:12}}>
+                <div><div className="stat-val mono" style={{color:'#10b981',textShadow:'0 0 20px rgba(16,185,129,.3)'}}>{d.win_rate}%</div><div className="stat-sub">Efectividad</div></div>
+                <Ring pct={d.win_rate} size={62} stroke={5} color={d.win_rate>=50?'#10b981':'#f59e0b'}/>
+              </div>
+            </div>
+            <div className="stat-card fade-up-4">
+              <div className="stat-label">{Ic.info} Avg Win / Loss</div>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginTop:4}}>
+                <span className="mono" style={{fontSize:20,fontWeight:800,color:'#10b981',textShadow:'0 0 12px rgba(16,185,129,.3)'}}>${d.avg_win}</span>
+                <span style={{color:'#1e2a3a',fontSize:16}}>/</span>
+                <span className="mono" style={{fontSize:20,fontWeight:800,color:'#ef4444',textShadow:'0 0 12px rgba(239,68,68,.3)'}}>${d.avg_loss}</span>
+              </div>
+              <div style={{display:'flex',gap:3,marginTop:8,height:4,borderRadius:2,overflow:'hidden'}}>
+                <div style={{flex:d.avg_win||1,background:'#10b981',borderRadius:2}}/>
+                <div style={{flex:d.avg_loss||1,background:'#ef4444',borderRadius:2}}/>
+              </div>
+            </div>
+          </div>
+
+          {/* Fila 2 — LAROC Score | Heatmap | Win% Line (3 columnas, sin hueco) */}
+          <div style={{display:'grid',gridTemplateColumns:'240px 1fr 1fr',gap:12,marginBottom:12}}>
+            {/* LAROC Score + Radar */}
+            <div className="card">
+              <div className="sec-hdr"><div className="sec-title">LAROC Score</div></div>
+              <RadarChart data={d.radar}/>
+              <div className="div"/>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>
+                <div>
+                  <div style={{fontSize:9,color:'#475569',letterSpacing:'.12em',textTransform:'uppercase',marginBottom:4}}>Puntuación</div>
+                  <div className="mono glow-text" style={{fontSize:28,fontWeight:900,background:'linear-gradient(135deg,#a78bfa,#06b6d4)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>{d.laroc_score}</div>
+                </div>
+                <span className="badge badge-cyan">Top SMC</span>
+              </div>
+              <div className="score-bar-wrap" style={{marginTop:8}}><div className="score-bar" style={{width:d.laroc_score+'%'}}/></div>
+            </div>
+
+            {/* Tracker de Consistencia (heatmap) */}
+            <div className="card">
+              <div className="sec-hdr">
+                <div className="sec-title">Tracker de Consistencia</div>
+                <span className="badge badge-beta">M1/M15</span>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'18px 1fr',gap:4,marginBottom:12}}>
+                <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around'}}>
+                  {['L','M','X','J','V','S','D'].map(l=><div key={l} className="mono" style={{fontSize:9,color:'#2a3347',height:13,display:'flex',alignItems:'center'}}>{l}</div>)}
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(8,1fr)',gap:3}}>
+                  {d.heatmap.slice(0,56).map((v,i)=><div key={i} className={`hm-cell hm-${Math.min(v,5)}`}/>)}
+                </div>
+              </div>
+              <div className="div"/>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginTop:4}}>
+                {[['Trades',d.trades_hoy,'#a78bfa'],['Exchanges',d.exchanges,'#06b6d4'],['Sharpe',d.sharpe,'#10b981']].map(([l,v,c])=>(
+                  <div key={l} style={{background:'rgba(255,255,255,.03)',borderRadius:8,padding:'8px 10px',border:'1px solid var(--b1)',textAlign:'center'}}>
+                    <div style={{fontSize:9,color:'#475569',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:3}}>{l}</div>
+                    <div className="mono" style={{fontSize:15,fontWeight:700,color:c}}>{v}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Métricas de crecimiento */}
+            <div className="card">
+              <div className="sec-hdr"><div className="sec-title">Métricas de Crecimiento</div></div>
+              <div style={{height:155,marginBottom:10}}><WinLineChart wp={d.win_pct_chart} aw={d.avg_win_chart} al={d.avg_loss_chart}/></div>
+              <div className="div"/>
+              <div style={{display:'flex',gap:8}}>
+                <span className="badge badge-green">WIN {d.win_rate}%</span>
+                <span className="badge badge-red">DD {d.drawdown}%</span>
+                <span className="badge badge-purple">SHARPE {d.sharpe}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Fila 3 — Balance chart + Módulos table */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1.1fr',gap:12,marginBottom:12}}>
+            <div className="card">
+              <div className="sec-hdr"><div className="sec-title">Curva de Rendimiento Estructural</div></div>
+              <div style={{height:148}}><BalanceChart data={d.balance_chart}/></div>
+            </div>
+            <div className="card" style={{padding:0,overflow:'hidden'}}>
+              <div style={{padding:'14px 18px',borderBottom:'1px solid rgba(255,255,255,.05)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <div className="sec-title">Estatus Módulos Activos</div><span className="badge badge-purple">LAROC V2.0</span>
+              </div>
+              <table className="tbl">
+                <thead><tr><th>Par</th><th>Temporalidad</th><th>Estado</th><th>Win%</th></tr></thead>
+                <tbody>
+                  {d.bots.map(b=>(
+                    <tr key={b.par}>
+                      <td><div style={{display:'flex',alignItems:'center',gap:8}}>
+                        <div className="avatar" style={{width:30,height:30,background:'linear-gradient(135deg,rgba(124,58,237,.2),rgba(6,182,212,.15))',color:'#a78bfa',fontSize:9}}>{b.par.slice(0,3)}</div>
+                        <div><div style={{fontWeight:700,fontSize:12,color:'#f1f5f9'}}>{b.par}</div><div style={{fontSize:10,color:'#475569'}}>{b.exchange}</div></div>
+                      </div></td>
+                      <td><span className="badge badge-blue">M1/M15/H1</span></td>
+                      <td><span style={{display:'flex',alignItems:'center',gap:5,fontSize:11}}><span style={{width:6,height:6,borderRadius:'50%',background:'#10b981',boxShadow:'0 0 6px #10b981',display:'inline-block'}}/><span style={{color:'#10b981'}}>Monitoreando</span></span></td>
+                      <td><span className="mono" style={{color:'#a78bfa',fontWeight:700}}>{d.win_rate}%</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Fila 4 — Activo + Motor + Log */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1.4fr',gap:12}}>
+            <div className="card" style={{display:'flex',alignItems:'center',gap:14}}>
+              <div style={{width:46,height:46,borderRadius:12,background:'linear-gradient(135deg,#7c3aed,#06b6d4)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:11,fontWeight:800,boxShadow:'0 0 20px rgba(124,58,237,.4)',flexShrink:0}}>{(d.ultimo_activo||'EUR').slice(0,3)}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:9,color:'#475569',textTransform:'uppercase',letterSpacing:'.12em',marginBottom:4}}>Activo en Radar</div>
+                <div className="mono" style={{fontSize:18,fontWeight:900,background:'linear-gradient(135deg,#a78bfa,#67e8f9)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',letterSpacing:'.06em'}}>{d.ultimo_activo}</div>
+              </div>
+              <span className="badge badge-green" style={{flexShrink:0}}>LIVE</span>
+            </div>
+            <div className="card">
+              <div style={{fontSize:9,color:'#475569',textTransform:'uppercase',letterSpacing:'.12em',marginBottom:8}}>Fase del Motor de Decisión</div>
+              <Typing text={d.ultimo_status}/>
+              <div style={{display:'flex',gap:6,marginTop:10}}>
+                <span className="badge badge-green">ALGORITMO OK</span>
+                <span className="badge badge-cyan">{d.exchanges} exchanges</span>
+              </div>
+            </div>
+            <div className="card">
+              <div className="sec-hdr"><div className="sec-title">Bitácora de Eventos Recientes</div><span className="badge badge-green">LIVE</span></div>
+              <div style={{maxHeight:130,overflowY:'auto'}}>
+                {d.logs.slice(0,5).map((l,i)=>(
+                  <div key={i} className="log-row">
+                    <span className="log-time">{l.ts}</span>
+                    <span className={`badge ${l.tipo==='ok'?'badge-green':l.tipo==='warn'?'badge-amber':'badge-purple'}`} style={{flexShrink:0}}>{(l.tipo||'info').toUpperCase()}</span>
+                    <span style={{color:'#94a3b8',flex:1}}>{l.msg}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          </>
+        )}
+
+        {/* ════ BOTS ════ */}
+        {tab==='bots'&&(
+          <>
+          <PH title="Configuración de Activos" sub="Estrategias SMC asignadas a cada par operativo"/>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:14}}>
+            {d.bots.map(b=>(
+              <div key={b.par} className="card" style={{padding:22}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:16}}>
+                  <div style={{display:'flex',alignItems:'center',gap:12}}>
+                    <div style={{width:44,height:44,borderRadius:12,background:'linear-gradient(135deg,rgba(124,58,237,.2),rgba(6,182,212,.15))',display:'flex',alignItems:'center',justifyContent:'center',color:'#a78bfa',fontSize:14,fontWeight:800,border:'1px solid rgba(124,58,237,.2)'}}>{b.par.slice(0,2)}</div>
+                    <div><div style={{fontWeight:800,fontSize:16,color:'#f1f5f9'}}>{b.par}</div><div style={{fontSize:11,color:'#475569',marginTop:1}}>{b.exchange} · Window M1</div></div>
+                  </div>
+                  <span className="badge badge-green">ACTIVO</span>
+                </div>
+                <div className="div"/>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                  {[['Estrategia','SMC / ICT (2-Leg)'],['Filtro Adicional','Divergencia SMT Pro (Pearson)']].map(([k,v])=>(
+                    <div key={k} style={{background:'rgba(255,255,255,.03)',borderRadius:10,padding:'10px 12px',border:'1px solid var(--b1)'}}>
+                      <div style={{fontSize:9,color:'#475569',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5}}>{k}</div>
+                      <div style={{fontWeight:700,fontSize:12,color:'#a78bfa'}}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          </>
+        )}
+
+        {/* ════ JOURNAL ════ */}
+        {tab==='journal'&&(
+          <>
+          <PH title="Journal de Decisiones de Smart Money" sub="Historial automatizado y auditoría algorítmica de MetaTrader 5"/>
+          <div style={{display:'grid',gridTemplateColumns:'1.4fr 1fr',gap:14}}>
+            <div>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+                <div className="sec-title">Registro Automatizado de Posiciones</div>
+                <span className="badge badge-purple">{d.journal.length} operaciones en historial</span>
+              </div>
+              {d.journal.length===0?<p style={{color:'#2a3347',fontSize:13}}>No hay operaciones en los últimos 7 días.</p>:d.journal.map((e,idx)=><JEntry key={idx} e={e}/>)}
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              <div className="card">
+                <div className="sec-hdr"><div className="sec-title">Estadísticas del Mes</div></div>
+                <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:14}}>
+                  <Ring pct={d.win_rate} size={88} color="#10b981"/>
+                  <div>
+                    <div style={{fontSize:13,fontWeight:700,color:'#10b981'}}>&#9650; {d.win_rate}% Ganados</div>
+                    <div style={{fontSize:13,fontWeight:700,color:'#ef4444',marginTop:5}}>&#9660; {100-d.win_rate}% Perdidos</div>
+                    <div className="mono" style={{fontSize:10,color:'#475569',marginTop:8}}>SHARPE: {d.sharpe} · DD: {d.drawdown}%</div>
+                  </div>
+                </div>
+                <div style={{height:90}}><PnLChart data={d.pnl_chart}/></div>
+              </div>
+              <div className="card">
+                <div className="sec-hdr"><div className="sec-title">Log del Sistema</div></div>
+                <div style={{maxHeight:200,overflowY:'auto'}}>
+                  {d.logs.slice(-8).reverse().map((l,i)=>(
+                    <div key={i} className="log-row">
+                      <span className="log-time">{l.ts}</span>
+                      <span className={`badge ${l.tipo==='ok'?'badge-green':l.tipo==='warn'?'badge-amber':'badge-purple'}`} style={{flexShrink:0}}>{(l.tipo||'info').toUpperCase()}</span>
+                      <span style={{color:'#94a3b8',flex:1}}>{l.msg}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          </>
+        )}
+
+        {/* ════ ANALYTICS ════ */}
+        {tab==='analytics'&&(
+          <>
+          <PH title="Métricas Avanzadas" sub="Análisis de comportamiento cuantitativo"/>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:14}}>
+            <div className="card"><div className="sec-hdr"><div className="sec-title">Rendimiento de Balance</div></div><div style={{height:180}}><BalanceChart data={d.balance_chart}/></div></div>
+            <div className="card"><div className="sec-hdr"><div className="sec-title">Frecuencia de Aciertos</div></div><div style={{height:180}}><PnLChart data={d.pnl_chart}/></div></div>
+          </div>
+          </>
+        )}
+
+        {/* ════ CALENDARIO ════ */}
+        {tab==='calendar'&&(
+          <>
+          <PH title="Calendario Financiero" sub="Mapeo diario de ganancias y pérdidas"/>
+          <div className="card"><CalendarView trades={d.cal_trades}/></div>
+          </>
+        )}
+
+        {/* ════ CONFIG — robot 3D aquí, llenando el espacio ════ */}
+        {tab==='config'&&(
+          <>
+          <PH title="Parámetros Operativos del Sistema" sub="Variables institucionales inyectadas en LAROC AI V2.0"/>
+
+          {/* Filtros — card superior */}
+          <div className="card" style={{marginBottom:14}}>
+            <div className="sec-hdr"><div className="sec-title">Filtros y Seguridad Activa</div></div>
+            {[
+              ['Killzones','Londres (02:00–04:00) · Nueva York (07:00–10:00)'],
+              ['Protección de Noticias','Calendario de Forex Factory integrado (filtro de impacto High automático)'],
+              ['Filtro de Confirmación','Correlación de Pearson por debajo de 0.40 para SMT Pro'],
+              ['Gestión de Stop Loss','Jerarquía adaptativa (Opción 2 Sniper primero, Opción 1 Estructural como respaldo)'],
+            ].map(([k,v])=>(
+              <div key={k} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid rgba(255,255,255,.04)'}}>
+                <span style={{fontSize:13,color:'#94a3b8',fontWeight:500}}>{k}</span>
+                <span style={{fontSize:12,color:'#a78bfa',fontWeight:600,maxWidth:'58%',textAlign:'right'}}>{v}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Robot 3D + métricas de sistema — fila inferior que llena el espacio */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 280px',gap:14}}>
+            {/* Robot canvas */}
+            <div className="robot-card" style={{height:300}}>
+              <RobotCanvas/>
+              <div style={{position:'absolute',bottom:14,left:16,display:'flex',alignItems:'center',gap:8}}>
+                <div style={{display:'flex',alignItems:'center',gap:6,background:'rgba(0,0,0,.55)',borderRadius:20,padding:'5px 14px',backdropFilter:'blur(8px)',border:'1px solid rgba(124,58,237,.3)'}}>
+                  <div style={{width:6,height:6,borderRadius:'50%',background:'#10b981',boxShadow:'0 0 8px #10b981'}}/>
+                  <span className="mono" style={{fontSize:10,color:'#a78bfa',letterSpacing:'.12em'}}>LAROC ENGINE · SMC/ICT ACTIVE</span>
+                </div>
+              </div>
+              <div style={{position:'absolute',top:14,right:14,display:'flex',gap:6}}>
+                <span className="badge badge-purple">SMC</span>
+                <span className="badge badge-cyan">ICT</span>
+              </div>
+            </div>
+
+            {/* Panel de métricas del sistema */}
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              <div className="card" style={{flex:1}}>
+                <div className="sec-hdr"><div className="sec-title">Estado del Sistema</div></div>
+                {[
+                  ['Algoritmo','LAROC AI V2.0','#10b981'],
+                  ['Motor','MetaTrader 5','#a78bfa'],
+                  ['Pares activos',d.bots.length,'#06b6d4'],
+                  ['Win Rate actual',d.win_rate+'%',d.win_rate>=50?'#10b981':'#f59e0b'],
+                  ['Net P&L (7D)','$'+fmt(d.net_pnl),d.net_pnl>=0?'#10b981':'#ef4444'],
+                  ['Drawdown',d.drawdown+'%','#ef4444'],
+                ].map(([k,v,c])=>(
+                  <div key={k} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:'1px solid rgba(255,255,255,.04)'}}>
+                    <span style={{fontSize:12,color:'#475569'}}>{k}</span>
+                    <span className="mono" style={{fontSize:12,fontWeight:700,color:c}}>{v}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="card">
+                <div className="sec-hdr"><div className="sec-title">Fase del Motor</div></div>
+                <Typing text={d.ultimo_status}/>
+                <div style={{display:'flex',gap:6,marginTop:10,flexWrap:'wrap'}}>
+                  <span className="badge badge-green">ALGORITMO OK</span>
+                  <span className="badge badge-cyan">{d.exchanges} exchanges</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          </>
+        )}
+
+      </div>
+    </div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
